@@ -85,6 +85,9 @@ public class MetoHistoricHelper {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        for (MetoHistoricRow row : metoHistoricRows) {
+            //System.out.println(">>>>>>>>>>>>sik" + row);
+        }
         return metoHistoricRows;
     }
 
@@ -101,7 +104,7 @@ public class MetoHistoricHelper {
             for (String month : MONTHS) {
                 List<MetoHistoricRow> monthRows =  getMonth(metoHistoricRows, Integer.toString(i) + "-" + month);
 
-                if (monthRows.size() == 2) {
+                if (monthRows.size() >= 2) {
                     Float medTemp = (monthRows.get(0).getTempMedC() + monthRows.get(1).getTempMedC()) / 2;
                     avgTempMap.put((i) + "-" + month,medTemp);
                 }

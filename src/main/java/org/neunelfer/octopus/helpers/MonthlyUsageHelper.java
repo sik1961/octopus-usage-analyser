@@ -1,9 +1,8 @@
 package org.neunelfer.octopus.helpers;
 
 
-import org.neunelfer.octopus.pojo.MetoHistoricRow;
 import org.neunelfer.octopus.pojo.MonthlyUsage;
-import org.neunelfer.octopus.pojo.OctopusDownloadRow;
+import org.neunelfer.octopus.pojo.OctopusUsageRow;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -14,8 +13,11 @@ import java.util.*;
 
 public class MonthlyUsageHelper {
 
-    public List<OctopusDownloadRow> getOctopusData(List<String> csvFileNames, String xlsxFileName, boolean append) {
-        List<OctopusDownloadRow> octopusDownloadRows = new ArrayList<>();
+    private static final String DASH = "-";
+    private static final String MM_FMT = "%02d";
+
+    public List<OctopusUsageRow> getOctopusData(List<String> csvFileNames, Integer billDate, String xlsxFileName, boolean append) {
+        List<OctopusUsageRow> octopusDownloadRows = new ArrayList<>();
 
         for(String csvFile: csvFileNames) {
             BufferedReader br = null;
@@ -28,7 +30,7 @@ public class MonthlyUsageHelper {
 
                     if (e.length == 4 && !e[0].startsWith("Consumption")) {
 
-                        octopusDownloadRows.add(OctopusDownloadRow.builder()
+                        octopusDownloadRows.add(OctopusUsageRow.builder()
                                 .ConsumptionKwh(Float.parseFloat(e[0]))
                                 .EstimatedCostIncTaxPence(Float.parseFloat(e[1]))
                                 .start(OffsetDateTime.parse(e[2].trim()))
@@ -46,35 +48,47 @@ public class MonthlyUsageHelper {
         return octopusDownloadRows;
     }
 
-    public Map<String,MonthlyUsage> getMonthlyUsageFromDownloadedData(List<OctopusDownloadRow> downloadedRows,
-                                                                      Map<String,Float> tempMap) {
+    public Map<String,MonthlyUsage> getMonthlyUsageFromDownloadedData(List<OctopusUsageRow> usageRows,
+                                                                      Map<String,Float> tempMap,
+                                                                      Integer billDate) {
         Map<String,MonthlyUsage> monthlyUsage = new TreeMap<>();
 
-        for (OctopusDownloadRow row : downloadedRows) {
-            MonthlyUsage currentMonth = monthlyUsage.get(getMonthId(row));
+        for (OctopusUsageRow row : usageRows) {
+            MonthlyUsage currentMonth = monthlyUsage.get(getMonthId(row,billDate));
             if (currentMonth == null) {
-                monthlyUsage.put(getMonthId(row),MonthlyUsage.builder()
-                        .monthId(getMonthId(row))
-                        .avgTempC(tempMap.get(getMonthId(row)))
+                monthlyUsage.put(getMonthId(row,billDate),MonthlyUsage.builder()
+                        .monthId(getMonthId(row, billDate))
+                        .avgTempC(tempMap.get(getMonthId(row, billDate)))
                         .consumedKwh(row.getConsumptionKwh())
                         .costGbp(row.getEstimatedCostIncTaxPence()/100)
-                        .pencePerKwh(row.getEstimatedCostIncTaxPence()/row.getConsumptionKwh())
                         .build());
 
             } else {
-                monthlyUsage.put(getMonthId(row),MonthlyUsage.builder()
-                        .monthId(getMonthId(row))
-                        .avgTempC(tempMap.get(getMonthId(row)))
+                monthlyUsage.put(getMonthId(row, billDate),MonthlyUsage.builder()
+                        .monthId(getMonthId(row, billDate))
+                        .avgTempC(tempMap.get(getMonthId(row, billDate)))
                         .consumedKwh(currentMonth.getConsumedKwh() + row.getConsumptionKwh())
                         .costGbp(currentMonth.getCostGbp() + row.getEstimatedCostIncTaxPence()/100)
-                        .pencePerKwh(row.getEstimatedCostIncTaxPence()/row.getConsumptionKwh())
                         .build());
             }
         }
         return monthlyUsage;
     }
 
-    private String getMonthId(OctopusDownloadRow row) {
-        return row.getStart().toString().substring(0, 7);
+    private String getMonthId(OctopusUsageRow row, Integer billDate) {
+        Integer year;
+        Integer month;
+        if (row.getStart().getDayOfMonth() >= billDate) {
+           month = row.getStart().getMonthValue();
+           year = row.getStart().getYear();
+        } else {
+            month = row.getStart().getMonthValue() - 1;
+            year = row.getStart().getYear();
+            if (month < 1) {
+                month = 12;
+                year--;
+            }
+        }
+        return new StringBuilder().append(year).append(DASH).append(String.format(MM_FMT, month)).toString();
     }
 }
