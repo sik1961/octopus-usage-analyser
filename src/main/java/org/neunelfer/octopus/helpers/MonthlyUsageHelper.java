@@ -28,14 +28,25 @@ public class MonthlyUsageHelper {
                 while ((line = br.readLine()) != null) {
                     String[] e = line.split(",");
 
-                    if (e.length == 4 && !e[0].startsWith("Consumption")) {
+                    if (e.length >=4 && !e[0].startsWith("Consumption")) {
 
-                        octopusDownloadRows.add(OctopusUsageRow.builder()
-                                .ConsumptionKwh(Float.parseFloat(e[0]))
-                                .EstimatedCostIncTaxPence(Float.parseFloat(e[1]))
-                                .start(OffsetDateTime.parse(e[2].trim()))
-                                .end(OffsetDateTime.parse(e[3].trim()))
-                                .build());
+                        if (e.length == 4) {
+                            octopusDownloadRows.add(OctopusUsageRow.builder()
+                                    .consumptionKwh(Float.parseFloat(e[0]))
+                                    .estimatedCostIncTaxPence(Float.parseFloat(e[1]))
+                                    .standingCharge(0.0F)
+                                    .start(OffsetDateTime.parse(e[2].trim()))
+                                    .end(OffsetDateTime.parse(e[3].trim()))
+                                    .build());
+                        } else if (e.length == 5) {
+                            octopusDownloadRows.add(OctopusUsageRow.builder()
+                                    .consumptionKwh(Float.parseFloat(e[0]))
+                                    .estimatedCostIncTaxPence(Float.parseFloat(e[1]))
+                                    .standingCharge(Float.parseFloat(e[2]))
+                                    .start(OffsetDateTime.parse(e[3].trim()))
+                                    .end(OffsetDateTime.parse(e[4].trim()))
+                                    .build());
+                        }
                     }
                 }
                 br.close();
@@ -78,7 +89,7 @@ public class MonthlyUsageHelper {
     private String getMonthId(OctopusUsageRow row, Integer billDate) {
         Integer year;
         Integer month;
-        if (row.getStart().getDayOfMonth() >= billDate) {
+        if (row.getStart().getDayOfMonth() > billDate) {
            month = row.getStart().getMonthValue();
            year = row.getStart().getYear();
         } else {
@@ -89,6 +100,10 @@ public class MonthlyUsageHelper {
                 year--;
             }
         }
-        return new StringBuilder().append(year).append(DASH).append(String.format(MM_FMT, month)).toString();
+        return new StringBuilder().append(year).append(DASH)
+                .append(String.format(MM_FMT, month))
+                //.append(DASH)
+                //.append(String.format(MM_FMT, billDate))
+                .toString();
     }
 }

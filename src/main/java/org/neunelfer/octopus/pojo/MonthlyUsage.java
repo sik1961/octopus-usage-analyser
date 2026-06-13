@@ -15,7 +15,7 @@ public class MonthlyUsage {
     private Float costGbp;
 
     public String toCsv() {
-        return String.format("%s,%.2f,%.2f,%.2f", monthId, avgTempC, consumedKwh, costGbp);
+        return String.format("%s,%.2f,%.2f,%.2f", monthId + "-14", avgTempC, consumedKwh, costGbp);
     }
 
 }

@@ -9,8 +9,9 @@ import java.time.OffsetDateTime;
 @ToString
 @EqualsAndHashCode
 public class OctopusUsageRow {
-    private Float ConsumptionKwh;
-    private Float EstimatedCostIncTaxPence;
+    private Float consumptionKwh;
+    private Float estimatedCostIncTaxPence;
+    private Float standingCharge;
     private OffsetDateTime start;
     private OffsetDateTime end;
 }

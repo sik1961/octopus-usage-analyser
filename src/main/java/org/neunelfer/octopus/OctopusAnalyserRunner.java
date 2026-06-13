@@ -28,7 +28,7 @@ public class OctopusAnalyserRunner {
 
         Map<String,Float> averageTempMap = metoHistoricHelper.getAvgTempMap(metoHistRows);
 
-        List<OctopusUsageRow> usageRows = monthlyUsageHelper.getOctopusData(OCTOPUS_USAGE_CSV_FILES, 14, null, false);
+        List<OctopusUsageRow> usageRows = monthlyUsageHelper.getOctopusData(OCTOPUS_USAGE_CSV_FILES, BILL_DATE, null, false);
 
         Map<String,MonthlyUsage> monthlyUsageMap = monthlyUsageHelper.getMonthlyUsageFromDownloadedData(usageRows, averageTempMap, BILL_DATE);
 
